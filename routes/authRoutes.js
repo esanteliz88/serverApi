@@ -8,22 +8,11 @@ const router = express.Router();
 
 // Registro de usuario
 router.post('/register', [
-    body('username')
-        .notEmpty().withMessage('El nombre de usuario es requerido')
-        .isString().withMessage('El nombre de usuario debe ser un string'),
-    body('password')
-        .notEmpty().withMessage('La contraseña es requerida')
-        .isString().withMessage('La contraseña debe ser un string')
-        .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
-    body('appsUsed')
-        .notEmpty()
-        .isString().withMessage('Ingrese que App va a usar este servicio'),
-    body('fullName')
-        .optional()
-        .isString().withMessage('El nombre completo debe ser un string'),
-    body('email')
-        .optional()
-        .isEmail().withMessage('El email debe tener un formato válido'),
+    body('username').notEmpty().withMessage('El nombre de usuario es requerido').isString().withMessage('El nombre de usuario debe ser un string'),
+    body('password').notEmpty().withMessage('La contraseña es requerida').isString().withMessage('La contraseña debe ser un string').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+    body('appsUsed').notEmpty().withMessage('Ingrese que App va a usar este servicio').isString().withMessage('El campo appsUsed debe ser un string'),
+    body('fullName').optional().isString().withMessage('El nombre completo debe ser un string'),
+    body('email').optional().isEmail().withMessage('El email debe tener un formato válido'),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -62,12 +51,8 @@ router.post('/register', [
 
 // Inicio de sesión de usuario
 router.post('/token', [
-    body('username')
-        .notEmpty().withMessage('El nombre de usuario es requerido')
-        .isString().withMessage('El nombre de usuario debe ser un string'),
-    body('password')
-        .notEmpty().withMessage('La contraseña es requerida')
-        .isString().withMessage('La contraseña debe ser un string'),
+    body('username').notEmpty().withMessage('El nombre de usuario es requerido').isString().withMessage('El nombre de usuario debe ser un string'),
+    body('password').notEmpty().withMessage('La contraseña es requerida').isString().withMessage('La contraseña debe ser un string'),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

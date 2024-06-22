@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js'; // Importar la función de conexión a la base de datos
 import { authRouter } from './routes/authRoutes.js';
 import protectedRouter from './routes/protectedRoutes.js'; // Importar el router de rutas protegidas
+import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 dotenv.config();
 const app = express();
@@ -29,3 +30,9 @@ app.get('/', (req, res) => {
 
 // Middleware para servir archivos estáticos
 app.use(express.static('public'));
+
+// Middleware para manejar rutas no encontradas
+app.use(notFound);
+
+// Middleware para manejo de errores
+app.use(errorHandler);

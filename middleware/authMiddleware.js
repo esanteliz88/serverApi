@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import User from '../models/token.js'; // Importa el modelo de usuario desde donde esté definido
+import User from '../models/token.js';
 
 dotenv.config();
 
