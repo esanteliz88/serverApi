@@ -1,77 +1,99 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import { body, validationResult } from 'express-validator';
 import { generateToken } from '../jwt.js';
-import User from '../models/token.js'; // Importar el modelo de usuario
+import User from '../models/token.js';
 
 const router = express.Router();
 
 // Registro de usuario
-router.post('/register', async (req, res) => {
-    const { username, password, appsUsed, fullName, email } = req.body;
-
-    try {
-        // Validar que el usuario no exista
-        let user = await User.findOne({ username });
-        if (user) {
-            return res.status(400).json({ message: 'El usuario ya existe.' });
+router.post('/register', [
+    body('username')
+        .notEmpty().withMessage('El nombre de usuario es requerido')
+        .isString().withMessage('El nombre de usuario debe ser un string'),
+    body('password')
+        .notEmpty().withMessage('La contraseña es requerida')
+        .isString().withMessage('La contraseña debe ser un string')
+        .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+    body('appsUsed')
+        .notEmpty()
+        .isString().withMessage('Ingrese que App va a usar este servicio'),
+    body('fullName')
+        .optional()
+        .isString().withMessage('El nombre completo debe ser un string'),
+    body('email')
+        .optional()
+        .isEmail().withMessage('El email debe tener un formato válido'),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
         }
 
-        // Hashear la contraseña
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const { username, password, appsUsed, fullName, email } = req.body;
 
-        // Crear el nuevo usuario
-        user = new User({
-            username,
-            password: hashedPassword,
-            isActive: false, // Por defecto, el usuario está inactivo al registrarse
-            appsUsed,
-            fullName,
-            email,
-        });
+        try {
+            let user = await User.findOne({ username });
+            if (user) {
+                return res.status(400).json({ message: 'El usuario ya existe.' });
+            }
 
-        // Guardar usuario en la base de datos
-        await user.save();
+            const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Generar token
-        const token = generateToken(user);
+            user = new User({
+                username,
+                password: hashedPassword,
+                isActive: false,
+                appsUsed,
+                fullName,
+                email,
+            });
 
-        res.status(200).json({ token: `Bearer ${token}` }); // Concatenar 'Bearer' al token
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ message: 'Error en el servidor' });
+            await user.save();
+
+            const token = generateToken(user);
+            res.status(200).json({ token: `Bearer ${token}` });
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ message: 'Error interno del servidor' });
+        }
     }
-});
+]);
 
 // Inicio de sesión de usuario
-router.post('/token', async (req, res) => {
-    const { username, password } = req.body;
-
-    try {
-        // Buscar al usuario
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(400).json({ message: 'Usuario o contraseña incorrectos.' });
+router.post('/token', [
+    body('username')
+        .notEmpty().withMessage('El nombre de usuario es requerido')
+        .isString().withMessage('El nombre de usuario debe ser un string'),
+    body('password')
+        .notEmpty().withMessage('La contraseña es requerida')
+        .isString().withMessage('La contraseña debe ser un string'),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
         }
 
-        // Verificar la contraseña
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Usuario o contraseña incorrectos.' });
+        const { username, password } = req.body;
+
+        try {
+            const user = await User.findOne({ username });
+            if (!user) {
+                return res.status(400).json({ message: 'Usuario o contraseña incorrectos.' });
+            }
+
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Usuario o contraseña incorrectos.' });
+            }
+
+            const token = generateToken(user);
+            res.status(200).json({ token: `Bearer ${token}` });
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ message: 'Error interno del servidor' });
         }
-
-        // Verificar si el usuario está activo
-        if (!user.isActive) {
-            return res.status(400).json({ message: 'El usuario no está activo.' });
-        }
-
-        // Generar token
-        const token = generateToken(user);
-
-        res.status(200).json({ token: `Bearer ${token}` }); // Concatenar 'Bearer' al token
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ message: 'Error en el servidor' });
     }
-});
+]);
 
 export { router as authRouter };
