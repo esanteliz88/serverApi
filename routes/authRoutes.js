@@ -40,8 +40,7 @@ router.post('/register', [
 
             await user.save();
 
-            const token = generateToken(user);
-            res.status(200).json({ token: `Bearer ${token}` });
+            res.status(200).json({ message: 'Usuario registrado exitosamente. Debe ser activado por un administrador.' });
         } catch (error) {
             console.error(error.message);
             res.status(500).json({ message: 'Error interno del servidor' });
@@ -65,6 +64,10 @@ router.post('/token', [
             const user = await User.findOne({ username });
             if (!user) {
                 return res.status(400).json({ message: 'Usuario o contraseña incorrectos.' });
+            }
+
+            if (!user.isActive) {
+                return res.status(400).json({ message: 'El usuario no está activo. Por favor, contacte con el administrador.' });
             }
 
             const isMatch = await bcrypt.compare(password, user.password);
