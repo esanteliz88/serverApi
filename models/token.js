@@ -8,6 +8,7 @@ const userTokenSchema = new mongoose.Schema({
     fullName: { type: String, default: "" },
     email: { type: String, default: "" },
     role: { type: String, enum: ['user', 'admin'], default: 'user' }, // Rol del usuario (ej. 'user' o 'admin')
+    permiso: { type: String, enum: ['raiz','user', 'chat','guia'], default: 'raiz' }, // Rol del usuario (ej. 'user' o 'admin')
     createdAt: { type: Date, default: Date.now }, // Fecha de creación del usuario
 });
 
